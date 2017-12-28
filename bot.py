@@ -1,4 +1,6 @@
 from telegram.ext import Updater, CommandHandler
+from telegram import ParseMode
+
 
 def command_decorator(func):
     def func_wrapper(*args, **kwargs):
@@ -12,12 +14,14 @@ def command_decorator(func):
     return func_wrapper
 
 
+def get_group_members(chat):
+    return [member.user for member in chat.get_administrators()]
+
 
 @command_decorator
 def tag(bot, update):
-    bot.send_message(chat_id=update.message.chat_id, text="Tag")
-        # import pdb; pdb.set_trace()
-        #  [chatmember.user for chatmember in update.effective_chat.get_administrators()]
+    msg = ' '.join([user.mention_markdown() for user in get_group_members(update.effective_chat)])
+    bot.send_message(chat_id=update.message.chat_id, text=msg, parse_mode=ParseMode.MARKDOWN)
 
 @command_decorator
 def addsubgroup(bot, update):
@@ -33,7 +37,6 @@ def addsubgroup(bot, update):
 
 with open('token') as f:
     token = f.readline().strip()
-import pdb; pdb.set_trace()
 updater = Updater(token)
 
 updater.dispatcher.add_handler(CommandHandler('tag', tag))
