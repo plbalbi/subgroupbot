@@ -47,7 +47,7 @@ def addmember(bot, update):
     subgroup_name = words[1]
 
     subgroup = get_subgroup(update.message.chat_id, subgroup_name)
-    if len(subgroup) == 0:
+    if subgroup is None:
         return bot.send_message(chat_id=update.message.chat_id, text='Subgroup does not exist (404)')
 
     bot.send_message(chat_id=update.message.chat_id,
