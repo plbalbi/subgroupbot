@@ -59,3 +59,7 @@ def add_member(chat_id, tag, user_id, username, usertag):
         'tag': usertag
     }
     return app.post('/groups/{}/subgroups/{}/members'.format(chat_id, tag), member)
+
+def is_member(chat_id, tag, user_id):
+    lista = list(filter(lambda x: x['user_id']==user_id,members(chat_id, tag)))
+    return len(lista) > 0

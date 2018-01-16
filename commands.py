@@ -1,15 +1,20 @@
-from telegram import ParseMode
-import sqlite3 as lite
+from telegram import ParseMode, ReplyKeyboardRemove
+from apifirebase import *
 
-from helpers import command_decorator, to_tag_str, get_group_members, get_group_member_keyboard, get_subgroup, insert_subgroup
-
-# CREATE TABLE SubGroup(name TEXT, group_chat_id DOUBLE);
-# CREATE TABLE Member(user_id INT, name TEXT, subgroup_chat_id DOUBLE, FOREIGN KEY(subgroup_chat_id) REFERENCES SubGroup(rowid));
+from helpers import command_decorator, to_tag_str, get_group_members, get_group_member_keyboard
 
 @command_decorator
 def tag(bot, update):
+    words = update.message.text.split(' ')
+    if len(words) == 1:
+        return bot.send_message(chat_id=update.message.chat_id, text="You should type the name of the subgroup")
+    elif len(words) > 2:
+        return bot.send_message(chat_id=update.message.chat_id, text="The subgroup name should be only one word")
+
+    users = members(update.message.chat_id, words[1])
+
     bot.send_message(chat_id=update.message.chat_id,
-                     text=to_tag_str(get_group_members(update.effective_chat)),
+                     text=' '.join([user['tag'] for user in users]),
                      parse_mode=ParseMode.MARKDOWN)
 
 
@@ -23,10 +28,11 @@ def addsubgroup(bot, update):
 
     subgroup_name = words[1]
 
-    if len(get_subgroup(update.message.chat_id, subgroup_name)) > 0:
+    subgroup = get_subgroup(update.message.chat_id, subgroup_name)
+    if subgroup and len(subgroup) > 0:
         return bot.send_message(chat_id=update.message.chat_id, text="This subgroup already exists")
 
-    insert_subgroup(subgroup_name, update.message.chat_id)
+    add_subgroup(update.message.chat_id, subgroup_name)
 
     bot.send_message(chat_id=update.message.chat_id, text="Adding {}".format(subgroup_name))
 
@@ -40,26 +46,33 @@ def addmember(bot, update):
 
     subgroup_name = words[1]
 
-    subgroups = get_subgroup(update.message.chat_id, subgroup_name)
-    if len(subgroups) == 0:
+    subgroup = get_subgroup(update.message.chat_id, subgroup_name)
+    if len(subgroup) == 0:
         return bot.send_message(chat_id=update.message.chat_id, text='Subgroup does not exist (404)')
 
     bot.send_message(chat_id=update.message.chat_id,
                      text='Please choose members:',
-                     reply_markup=get_group_member_keyboard(update.effective_chat, subgroup_name, update.message.chat_id))
+                     reply_markup=get_group_member_keyboard(update.effective_chat, subgroup_name))
 
 
 def buttons_callback(bot, update):
     query = update.callback_query
-    import pdb; pdb.set_trace()
-    data = query.data.split('-')
+    data = query.data.split('_')
     # "add_{}_to_{}_{}".format(member.user.id, subgroup_name, group_chat_id)
     if data[0] == "add":
+        ReplyKeyboardRemove(remove_keyboard=True)
         member_id = data[1]
-        subgroup_name = data[3]
-        group_chat_id = data[4]
+        user = update.effective_chat.get_member(member_id).user
+        if not is_member(data[4], data[3], user.id):
+            # import pdb; pdb.set_trace()
+            add_member(data[4], data[3], user.id, user.username, user.mention_markdown())
+            bot.send_message(chat_id=update.effective_chat.id, text="OK. {} agregado".format(user.username))
+        else:
+            bot.send_message(chat_id=update.effective_chat.id, text="Ya estaba este")
+
 
 
 def start(bot, update):
-    bot.send_message(chat_id=update.message.chat_id,
+    add_group(update.effective_chat.id, update.effective_chat.title)
+    bot.send_message(chat_id=update.effective_chat.id,
                      text="Hello. This bot only works on democratic groups, were everybody is admin.")
