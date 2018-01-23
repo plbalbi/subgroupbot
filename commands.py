@@ -6,10 +6,10 @@ from helpers import command_decorator, to_tag_str, get_group_members, get_group_
 @command_decorator
 def tag(bot, update):
     words = update.message.text.split(' ')
-    if len(words) != 1:
-        bot.send_message(chat_id=update.message.chat_id,
-                         text='Tag who?',
-                         reply_markup=get_subgroups_keyboard(update.effective_chat))
+    if len(words) != 2:
+        return bot.send_message(chat_id=update.message.chat_id,
+                                text='Tag who?',
+                                reply_markup=get_subgroups_keyboard(update.effective_chat))
 
     users = get_members(update.message.chat_id, words[1])
     bot.send_message(chat_id=update.message.chat_id,
