@@ -1,3 +1,4 @@
+from apifirebase import get_subgroups
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import sqlite3 as lite
@@ -25,6 +26,23 @@ def get_group_member_keyboard(chat, subgroup_name):
     keys = [InlineKeyboardButton(member.user.username or member.user.name,
                                      callback_data="add_{}_to_{}_{}".format(member.user.id, subgroup_name, group_chat_id))
                 for member in chat.get_administrators()]
+    keyboard = []
+    keyboard_row = []
+    for i in range(len(keys)):
+        keyboard_row.append(keys[i])
+        if i % 3 == 2:
+            keyboard.append(keyboard_row)
+            keyboard_row = []
+    if len(keyboard_row) > 0:
+        keyboard.append(keyboard_row)
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_subgroups_keyboard(chat):
+    group_chat_id = chat.id
+    keys = [InlineKeyboardButton(subgroup['tag'],
+                                 callback_data="tag_{}".format(subgroup['tag']))
+                for subgroup in get_subgroups(group_chat_id)]
     keyboard = []
     keyboard_row = []
     for i in range(len(keys)):
