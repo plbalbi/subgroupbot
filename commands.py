@@ -70,6 +70,29 @@ def buttons_callback(bot, update):
         else:
             bot.send_message(chat_id=update.effective_chat.id, text="Ya estaba este")
 
+@command_decorator
+def subgroups(bot, update):
+    subgroups = [subgroup["tag"] for subgroup in get_subgroups(update.effective_chat.id)]
+    bot.send_message(chat_id=update.effective_chat.id, text="\n".join(subgroups))
+    bot.send_message(chat_id=update.effective_chat.id, text="To get the members of a group use /members <subgroup_name>")
+
+@command_decorator
+def members(bot, update):
+    words = update.message.text.split(' ')
+    if len(words) == 1:
+        return bot.send_message(chat_id=update.message.chat_id, text="You should type the name of the subgroup (/members subgroup_name)")
+    elif len(words) > 2:
+        return bot.send_message(chat_id=update.message.chat_id, text="The subgroup name should be only one word")
+
+    subgroup_name = words[1]
+
+    subgroup = get_subgroup(update.message.chat_id, subgroup_name)
+    if subgroup is None:
+        return bot.send_message(chat_id=update.message.chat_id, text='Subgroup does not exist (404)')
+
+    members = [member["username"] for member in get_members(update.effective_chat.id, subgroup_name)]
+    bot.send_message(chat_id=update.effective_chat.id, text="\n".join(members))
+
 
 
 def start(bot, update):

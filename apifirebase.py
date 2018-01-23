@@ -26,7 +26,7 @@ def delete_group(chat_id):
 
 ########################## SUBGROUPS ###########################
 
-def subgroups(chat_id):
+def get_subgroups(chat_id):
     try:
         return list(app.get('/groups/{}/subgroups'.format(chat_id), None).values())
     except AttributeError:
@@ -46,7 +46,7 @@ def delete_group(chat_id, tag):
 
 ########################### MEMBERS ############################
 
-def members(chat_id, tag):
+def get_members(chat_id, tag):
     try:
         return list(app.get('/groups/{}/subgroups/{}/members'.format(chat_id, tag), None).values())
     except AttributeError:
